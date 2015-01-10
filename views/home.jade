@@ -1,0 +1,44 @@
+doctype html
+html
+    head
+        meta(charset="utf-8")
+        title lamatweet
+        link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundation/5.5.0/css/foundation.min.css")
+
+    body
+        
+        br
+        .mock(style="display:none")
+            .row
+                .large-2.columns.small-3
+                    img.avatar(width="80" src="http://placehold.it/80x80&text=[img]")
+                .large-10.columns
+                    p
+                        strong.author Unknown :
+                        span.content Bacon ipsum dolor sit amet nulla ham qui sint exercitation eiusmod commodo, chuck duis velit. Aute in reprehenderit, dolore aliqua non est magna in labore pig pork biltong.
+                    
+                    ul.inline-list
+             .row
+                 .large-12.columns
+                    hr
+        .start
+
+        //-SCRIPTS
+        script(src="https://cdnjs.cloudflare.com/ajax/libs/foundation/5.5.0/js/vendor/jquery.js")
+
+        script(src="/socket.io/socket.io.js")
+        script
+            | $( document ).ready(function() {
+            |   var socket = io();
+            |   var skel = $(".mock");
+            |   socket.emit('track', '#prisedotage');
+            |   socket.on('tweet', function(tweet){
+            |     var newTweet = skel.clone();
+            |     newTweet.find('.author').text(tweet.user.name + " : ");
+            |     newTweet.find('.content').text(tweet.text);
+            |     newTweet.find('.avatar').attr("src", tweet.user.profile_image_url);
+            |     $(".start").prepend(newTweet);
+            |     newTweet.slideDown( "slow" );
+            |     console.log('tweet: ' + tweet);
+            |   });
+            | });

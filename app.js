@@ -1,15 +1,9 @@
-var koa = require( 'koa' );
-var router = require('koa-router');
-var jade = jade = require('koa-jade');
-var socket = require( 'koa-socket' );
-
 global.__config = require('./config');
-twitter = require('./lib/twitter');
-
-twitter.init()
-
-/* INIT */
-var app = koa();
+var http = require('http');
+var app = require('koa')();
+var router = require('koa-router');
+var jade = require('koa-jade');
+var twStream = require('node-tweet-stream');
 
 app.use(jade.middleware({
     viewPath: __dirname + '/views',
@@ -20,16 +14,40 @@ app.use(jade.middleware({
 
 app.use(router(app));
 
+var server = http.createServer(app.callback());
+var io = require('socket.io')(server);
+
+//tw = new twStream(__config.oauth);
+//tw.track('#prisedotage');
+//tw.on('tweet', function(tweet) {
+    //console.log(tweet.text);
+//});
+
+
+
+
 /* ROUTES */
 app.get('/', function *(next) {
     yield this.render('home');
 });
 
 /* SOCKET.IO */
-socket.start( app );
+var usersStream = {};
 
-socket.on( 'join', function( data ) {
-    console.log( 'join event fired', data );
+
+io.on('connection', function(socket) {
+    socket.on('track', function( data ) {
+        if (!usersStream[this.client.id]) {
+            tw = new twStream(__config.oauth);
+            tw.track(data);
+            tw.on('tweet', function(tweet) {
+                console.log(tweet.text);
+                socket.emit('tweet',tweet);
+            });
+        } else {
+            usersStream[this.client.id].track(data);
+        }
+    });
 });
 
-app.server.listen( process.env.PORT || 3000 );
+server.listen(process.env.PORT || 3000 );
